@@ -33,6 +33,7 @@
                 if (elem.attr("for")) elem.attr("for", elem.attr("for").replace(idRegex, replacement));
                 if (elem.attr('id')) elem.attr('id', elem.attr('id').replace(idRegex, replacement));
                 if (elem.attr('name')) elem.attr('name', elem.attr('name').replace(idRegex, replacement));
+                if (elem.attr('aria-describedby')) elem.attr('aria-describedby', elem.attr('aria-describedby').replace(idRegex, replacement));
             },
 
             hasChildElements = function(row) {
