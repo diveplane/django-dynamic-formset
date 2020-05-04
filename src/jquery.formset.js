@@ -5,6 +5,7 @@
  *
  * Copyright (c) 2009, Stanislaus Madueke
  * All rights reserved.
+ * https://github.com/elo80ka/django-dynamic-formset
  *
  * Licensed under the New BSD License
  * See: http://www.opensource.org/licenses/bsd-license.php
@@ -18,6 +19,7 @@
             maxForms = $('#id_' + options.prefix + '-MAX_NUM_FORMS'),
             minForms = $('#id_' + options.prefix + '-MIN_NUM_FORMS'),
             childElementSelector = 'input,select,textarea,label,div',
+            activeForms = totalForms.val(),
             $$ = $(this),
 
             applyExtraClasses = function(row, ndx) {
@@ -42,15 +44,15 @@
 
             showAddButton = function() {
                 return maxForms.length == 0 ||   // For Django versions pre 1.2
-                    (maxForms.val() == '' || (maxForms.val() - totalForms.val() > 0));
+                    (maxForms.val() == '' || (maxForms.val() - activeForms > 0));
             },
 
             /**
-            * Indicates whether delete link(s) can be displayed - when total forms > min forms
-            */
+             * Indicates whether delete link(s) can be displayed - when total forms > min forms
+             */
             showDeleteLinks = function() {
                 return minForms.length == 0 ||   // For Django versions pre 1.7
-                    (minForms.val() == '' || (totalForms.val() - minForms.val() > 0));
+                    (minForms.val() == '' || (activeForms - minForms.val() > 0));
             },
 
             insertDeleteLink = function(row) {
@@ -65,11 +67,11 @@
                 } else if (row.is('TR')) {
                     // If the forms are laid out in table rows, insert
                     // the remove button into the last table cell:
-                    row.children(':last').append(deleteButtonHTML);
+                    row.children(':last').append(delButtonHTML);
                 } else if (row.is('UL') || row.is('OL')) {
                     // If they're laid out as an ordered/unordered list,
                     // insert an <li> after the last list item:
-                    row.append('<li>' + deleteButtonHTML + '</li>');
+                    row.append('<li>' + delButtonHTML + '</li>');
                 } else {
                     // Otherwise, just insert the remove button as the
                     // last child element of the form's container:
@@ -92,14 +94,14 @@
                         // and hide it, then let Django handle the deleting:
                         del.val('on');
                         row.hide();
-                        // Update the TOTAL_FORMS count:
-                        forms = $('.' + options.formCssClass).not('.formset-custom-template,:hidden');
+                        forms = $('.' + options.formCssClass).not(':hidden');
                     } else {
                         row.remove();
                         // Update the TOTAL_FORMS count:
-                        forms = $('.' + options.formCssClass).not('.formset-custom-template,:hidden');
+                        forms = $('.' + options.formCssClass).not('.formset-custom-template');
+                        totalForms.val(forms.length);
                     }
-                    totalForms.val(forms.length);
+                    activeForms = $('.' + options.formCssClass).not(':hidden').length;
                     for (var i=0, formCount=forms.length; i<formCount; i++) {
                         // Apply `extraClasses` to form rows so they're nicely alternating:
                         applyExtraClasses(forms.eq(i), i);
@@ -135,6 +137,7 @@
                     // we keep the forms hidden (thanks for the bug report and suggested fix Mike)
                     del.before('<input type="hidden" name="' + del.attr('name') +'" id="' + del.attr('id') +'" value="on" />');
                     row.hide();
+                    activeForms--;
                 } else {
                     del.before('<input type="hidden" name="' + del.attr('name') +'" id="' + del.attr('id') +'" />');
                 }
@@ -216,6 +219,7 @@
                     updateElementIndex($(this), options.prefix, formCount);
                 });
                 totalForms.val(formCount + 1);
+                activeForms = $('.' + options.formCssClass).not(':hidden').length;
                 // Check if we're above the minimum allowed number of forms -> show all delete link(s)
                 if (showDeleteLinks()){
                     $('a.' + delCssSelector).each(function(){$(this).show();});
